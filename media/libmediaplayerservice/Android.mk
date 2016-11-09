@@ -57,7 +57,13 @@ LOCAL_C_INCLUDES :=                                                 \
     $(TOP)/frameworks/native/include/media/openmax                  \
     $(TOP)/external/tremolo/Tremolo                                 \
     $(TOP)/frameworks/av/media/libavextensions                      \
-
+    
+    
+# Mediatek
+ifeq ($(strip $(BOARD_HAS_MTK_HARDWARE)),true)
+LOCAL_SHARED_LIBRARIES += libmtkplayer
+endif
+    
 LOCAL_CFLAGS += -Werror -Wno-error=deprecated-declarations -Wall #-DLOG_NDEBUG=0
 LOCAL_CLANG := true
 
