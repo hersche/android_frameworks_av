@@ -51,7 +51,8 @@ LOCAL_SRC_FILES :=  \
     device3/Camera3BufferManager.cpp \
     gui/RingBufferConsumer.cpp \
     utils/CameraTraces.cpp \
-    utils/AutoConditionLock.cpp
+    utils/AutoConditionLock.cpp \
+    utils/TagMonitor.cpp
 
 LOCAL_SHARED_LIBRARIES:= \
     libui \
@@ -81,6 +82,14 @@ LOCAL_CFLAGS += -Wall -Wextra -Werror
 
 ifneq ($(BOARD_NUMBER_OF_CAMERAS),)
     LOCAL_CFLAGS += -DMAX_CAMERAS=$(BOARD_NUMBER_OF_CAMERAS)
+endif
+
+ifeq ($(TARGET_HAS_LEGACY_CAMERA_HAL1),true)
+    LOCAL_CFLAGS += -DNO_CAMERA_SERVER
+endif
+
+ifeq ($(BOARD_NEEDS_MEMORYHEAPION),true)
+    LOCAL_CFLAGS += -DUSE_MEMORY_HEAP_ION
 endif
 
 LOCAL_MODULE:= libcameraservice

@@ -831,7 +831,11 @@ String8 CameraService::toString(std::set<userid_t> intSet) {
 Status CameraService::initializeShimMetadata(int cameraId) {
     int uid = getCallingUid();
 
+#ifdef NO_CAMERA_SERVER
+    String16 internalPackageName("media");
+#else
     String16 internalPackageName("cameraserver");
+#endif
     String8 id = String8::format("%d", cameraId);
     Status ret = Status::ok();
     sp<Client> tmp = nullptr;
@@ -911,8 +915,11 @@ Status CameraService::getLegacyParametersLazy(int cameraId,
 // Can camera service trust the caller based on the calling UID?
 static bool isTrustedCallingUid(uid_t uid) {
     switch (uid) {
-        case AID_MEDIA:         // mediaserver
+        case AID_MEDIA:        // mediaserver
+#ifndef NO_CAMERA_SERVER
         case AID_CAMERASERVER: // cameraserver
+#endif
+        case AID_RADIO:        // telephony
             return true;
         default:
             return false;
@@ -2119,6 +2126,8 @@ binder::Status CameraService::BasicClient::disconnect() {
     }
 
     finishCameraOps();
+    // Notify flashlight that a camera device is closed.
+    mCameraService->mFlashlight->deviceClosed(String8::format("%d", mCameraId));
     ALOGI("%s: Disconnected client for camera %d for PID %d", __FUNCTION__, mCameraId, mClientPid);
 
     // client shouldn't be able to call into us anymore
@@ -2215,10 +2224,6 @@ status_t CameraService::BasicClient::finishCameraOps() {
 
         // Transition device state to CLOSED
         mCameraService->updateProxyDeviceState(ICameraServiceProxy::CAMERA_STATE_CLOSED,
-                String8::format("%d", mCameraId));
-
-        // Notify flashlight that a camera device is closed.
-        mCameraService->mFlashlight->deviceClosed(
                 String8::format("%d", mCameraId));
     }
     // Always stop watching, even if no camera op is active
